@@ -17,3 +17,11 @@ body {
 #current-tool-p{
     font-size: 20px;
 }
+
+#controls-div{
+    position:fixed;
+    top:0;
+    right:0;
+    padding: 20px;
+    background-color: rgba(123,154,213, 150);
+}

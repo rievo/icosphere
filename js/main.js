@@ -31,7 +31,7 @@ let current_level_height = 0.0;
 let helper_size = 0.2
 
 
-let gui = undefined;
+//let gui = undefined;
 
 let loaded_font = undefined
 
@@ -81,7 +81,7 @@ function basicSetup(){
 	renderer = new THREE.WebGLRenderer({antialias:true});
 
 	// Configure renderer clear color
-	renderer.setClearColor("#97a9c6");
+	renderer.setClearColor("#070833");
 
 	// Configure renderer size
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -230,66 +230,85 @@ function onDocumentMouseClick(event){
 				let cell = getCellForMesh(intersects[0].object)
 				console.log(cell, cell.element);
 
-				
-
-				let vertices = []
-				for(let j = 3; j < cell.element.geometry.vertices.length; j++){
-					vertices.push(cell.element.geometry.vertices[j])
-				}
-				
-
-				let copied = []
-				for(let j =0; j < vertices.length; j++){
-					copied.push(new THREE.Vector3(vertices[j].x, vertices[j].y, vertices[j].z))
-				}
-				
-
-				for(let j =0; j < copied.length; j++){
-
-					//normalize each point of the copied array
-					copied[j] = copied[j].normalize();
-
-					//and project the height distance
-					copied[j].x = vertices[j].x + copied[j].x * current_level_height;
-					copied[j].y = vertices[j].y + copied[j].y * current_level_height;
-					copied[j].z = vertices[j].z + copied[j].z * current_level_height;
-
-					vertices.push(copied[j])
+				let alreadyPresent = false;
+				//Check if I have a cell above the one that I am clicking
+				for(let i = 0; i < cells.length; i++){
+					let c = cells[i];
+					if(c.a_index == cell.a_index &&
+						c.b_index == cell.b_index &&
+						c.c_index == cell.c_index &&
+						c.level == cell.level  +1 ){
+							//Already present
+							alreadyPresent = true;
+						}
 				}
 
-		
-				console.log(vertices);
+				if(alreadyPresent == false){
 
+					let vertices = []
+					for(let j = 3; j < cell.element.geometry.vertices.length; j++){
+						vertices.push(cell.element.geometry.vertices[j])
+					}
+					
+	
+					let copied = []
+					for(let j =0; j < vertices.length; j++){
+						copied.push(new THREE.Vector3(vertices[j].x, vertices[j].y, vertices[j].z))
+					}
+					
+	
+					for(let j =0; j < copied.length; j++){
+	
+						//normalize each point of the copied array
+						copied[j] = copied[j].normalize();
+	
+						//and project the height distance
+						copied[j].x = vertices[j].x + copied[j].x * current_level_height;
+						copied[j].y = vertices[j].y + copied[j].y * current_level_height;
+						copied[j].z = vertices[j].z + copied[j].z * current_level_height;
+	
+						vertices.push(copied[j])
+					}
+	
+			
+					console.log(vertices);
+	
+	
+					let faces = [];
+	
+					faces.push(new THREE.Face3(0,1,2))//bottom  OK
+					faces.push(new THREE.Face3(3,4,5))//top OK
+					faces.push(new THREE.Face3(1,4,3))
+					faces.push(new THREE.Face3(1,3,0))
+					faces.push(new THREE.Face3(4,1,2))
+					faces.push(new THREE.Face3(4,2,5))
+					faces.push(new THREE.Face3(2,3,5))
+					faces.push(new THREE.Face3(2,0,3))
+	
+					let geom = new THREE.Geometry(); 
+					geom.vertices = vertices;
+					geom.faces = faces;
+	
+					geom.computeFaceNormals();
+					geom.computeVertexNormals();
+	
+					let testmat = new THREE.MeshLambertMaterial({color: 0xffffff,transparent:false})
+					testmat.side = THREE.DoubleSide;
+	
+					let newMeshCellMesh = new THREE.Mesh( geom,testmat);
+	
+					let newCell = new Cell(newMeshCellMesh, cell.a_index, cell.b_index, cell.c_index, cell.level +1)
+					cells.push(newCell);
+	
+					targetList.push(newMeshCellMesh);
+	
+					sphere_group.add(newMeshCellMesh);
+				}else{
+					console.log("CANT CREATE")
+				}
 
-				let faces = [];
+				
 
-				faces.push(new THREE.Face3(0,1,2))//bottom  OK
-				faces.push(new THREE.Face3(3,4,5))//top OK
-				faces.push(new THREE.Face3(1,4,3))
-				faces.push(new THREE.Face3(1,3,0))
-				faces.push(new THREE.Face3(4,1,2))
-				faces.push(new THREE.Face3(4,2,5))
-				faces.push(new THREE.Face3(2,3,5))
-				faces.push(new THREE.Face3(2,0,3))
-
-				let geom = new THREE.Geometry(); 
-				geom.vertices = vertices;
-				geom.faces = faces;
-
-				geom.computeFaceNormals();
-				geom.computeVertexNormals();
-
-				let testmat = new THREE.MeshLambertMaterial({color: 0xffffff,transparent:false})
-				testmat.side = THREE.DoubleSide;
-
-				let newMeshCellMesh = new THREE.Mesh( geom,testmat);
-
-				let newCell = new Cell(newMeshCellMesh, cell.a_index, cell.b_index, cell.c_index, cell.level +1)
-				cells.push(newCell);
-
-				targetList.push(newMeshCellMesh);
-
-				sphere_group.add(newMeshCellMesh);
 			}
 			
 			
@@ -323,9 +342,6 @@ function createIcosphereGeometry(){
 	let result = {};
 
 	let geom = new THREE.Geometry(); 
-
-
-
 	
 	let s = 1; //Basic radius is 1
 	
@@ -715,28 +731,20 @@ function onModeUpdated(){
 }
 
 
-function prepareGUI(){
+/*function prepareGUI(){
 
 	gui = new dat.GUI();
-	/*gui.add(gui_info, "message")
-
-	let controller = gui.add(gui_info, "test");
-	controller.onChange(function(value){
-	})*/
-
 	let terrain_editing_folder = gui.addFolder("Terrain editing")
 	terrain_editing_folder.add(gui_info, "mode").listen();
 	terrain_editing_folder.add(gui_info, 'addvoxel').listen();
 	terrain_editing_folder.add(gui_info, 'removevoxel').listen();
-
-
 	let terrain_painting_folder = gui.addFolder("Terrain painting")
 	let terrain_options = Object.keys(CellType);
 	terrain_painting_folder.add(gui_info, "paintvoxel")
 	terrain_painting_folder.add(gui_info, "current_terrain", terrain_options )
 	
 
-}
+}*/
 
 
 

@@ -11,14 +11,40 @@ class Cell{
 
     constructor(element, a_index, b_index,c_index, level){
         this.element = element;
-
-        this.type = CellType.dirt.name; //String text
         this.a_index = a_index;
         this.b_index = b_index;
         this.c_index = c_index;
         this.level = level;
 
+        this.type = CellType.dirt.name; //String text, default value
+
+        this.populateType();
+        
+        
+
         this.changeType(this.type);
+    }
+
+    populateType(){
+        if(this.level == 0){
+            this.type = CellType.magma.name;
+        }else if(this.level <=4){
+            
+            let rnd = Math.random();
+            if(rnd <= 0.5){
+                this.type = CellType.grass.name;
+            }else{
+                this.type = CellType.dirt.name;
+            }
+
+        }else{
+            let rnd = Math.random();
+            if(rnd <= 0.5){
+                this.type = CellType.sky.name;
+            }else{
+                this.type = CellType.cloud.name;
+            }
+        }
     }
 
     changeType(newType){
