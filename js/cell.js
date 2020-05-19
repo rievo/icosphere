@@ -4,7 +4,7 @@ const CellType = Object.freeze({
     water:  { name: "water", color: 0x5869ed, opacity: 0.8  },
     cloud: { name: "cloud", color: 0xfafeff, opacity: 0.6 },
     grass: { name: "grass", color: 0x2c9c46, opacity: 1.0 },
-    magma: { name: "magma", color: 0xbd4d3c, opacity: 1.0 },
+    magma: { name: "magma", color: 0xbd0404, opacity: 1.0 },
   });
 
 class Cell{
@@ -38,12 +38,12 @@ class Cell{
             }
             this.element.material.opacity = newinfo.opacity;
 
-            if(this.type == CellType.magma.name){
+            /*if(this.type == CellType.magma.name){
                 //this.element.material.emissive.setHex(newinfo.color);
                 this.element.material.emissive.setHex(0x000)
             }else{
                 this.element.material.emissive.setHex(0x000)
-            }
+            }*/
         }else{
             console.log("ERROR: Trying to set the material to an unknown -> " + this.type)
         }

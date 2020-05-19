@@ -13,7 +13,7 @@ let controls;
 
 let facesArray = [];
 
-let recursionLevel = 2;
+let recursionLevel = 1;
 
 
 let targetList = [];
@@ -38,6 +38,11 @@ let loaded_font = undefined
 let dictionary_by_level = {}
 let cells = [];
 
+
+let default_level_heights = {
+	sky: 3,
+	magma: 2
+}
 
 let modes = {
 	none: "none",
@@ -225,7 +230,66 @@ function onDocumentMouseClick(event){
 				let cell = getCellForMesh(intersects[0].object)
 				console.log(cell, cell.element);
 
-				console.log(basic_icosphereGeometry.geometry.vertices)
+				
+
+				let vertices = []
+				for(let j = 3; j < cell.element.geometry.vertices.length; j++){
+					vertices.push(cell.element.geometry.vertices[j])
+				}
+				
+
+				let copied = []
+				for(let j =0; j < vertices.length; j++){
+					copied.push(new THREE.Vector3(vertices[j].x, vertices[j].y, vertices[j].z))
+				}
+				
+
+				for(let j =0; j < copied.length; j++){
+
+					//normalize each point of the copied array
+					copied[j] = copied[j].normalize();
+
+					//and project the height distance
+					copied[j].x = vertices[j].x + copied[j].x * current_level_height;
+					copied[j].y = vertices[j].y + copied[j].y * current_level_height;
+					copied[j].z = vertices[j].z + copied[j].z * current_level_height;
+
+					vertices.push(copied[j])
+				}
+
+		
+				console.log(vertices);
+
+
+				let faces = [];
+
+				faces.push(new THREE.Face3(0,1,2))//bottom  OK
+				faces.push(new THREE.Face3(3,4,5))//top OK
+				faces.push(new THREE.Face3(1,4,3))
+				faces.push(new THREE.Face3(1,3,0))
+				faces.push(new THREE.Face3(4,1,2))
+				faces.push(new THREE.Face3(4,2,5))
+				faces.push(new THREE.Face3(2,3,5))
+				faces.push(new THREE.Face3(2,0,3))
+
+				let geom = new THREE.Geometry(); 
+				geom.vertices = vertices;
+				geom.faces = faces;
+
+				geom.computeFaceNormals();
+				geom.computeVertexNormals();
+
+				let testmat = new THREE.MeshLambertMaterial({color: 0xffffff,transparent:false})
+				testmat.side = THREE.DoubleSide;
+
+				let newMeshCellMesh = new THREE.Mesh( geom,testmat);
+
+				let newCell = new Cell(newMeshCellMesh, cell.a_index, cell.b_index, cell.c_index, cell.level +1)
+				cells.push(newCell);
+
+				targetList.push(newMeshCellMesh);
+
+				sphere_group.add(newMeshCellMesh);
 			}
 			
 			
