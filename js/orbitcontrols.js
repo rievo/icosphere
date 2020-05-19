@@ -82,6 +82,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 	this.position0 = this.object.position.clone();
 	this.zoom0 = this.object.zoom;
 
+	
 	//
 	// public methods
 	//
@@ -789,6 +790,8 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function onMouseUp( event ) {
 
+
+		console.log("EH", scope.enabled)
 		if ( scope.enabled === false ) return;
 
 		handleMouseUp( event );

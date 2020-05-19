@@ -13,7 +13,7 @@ let controls;
 
 let facesArray = [];
 
-let recursionLevel = 1;
+let recursionLevel = 2;
 
 
 let targetList = [];
@@ -26,13 +26,30 @@ let distanceMult = 1.0001;
 let maxRadius = 1.5;
 let minRadius = 1;
 let heightLevels = 3;
+let current_level_height = 0.0;
 
 let helper_size = 0.2
 
 
+let gui = undefined;
+
 let loaded_font = undefined
 
 let dictionary_by_level = {}
+let cells = [];
+
+
+let modes = {
+	none: "none",
+	adding: "adding",
+	removing: "removing",
+	painting: "painting"
+}
+
+let current_mode = modes.removing
+
+
+let sphere_group = undefined;
 
 
 function basicSetup(){
@@ -41,7 +58,10 @@ function basicSetup(){
 
 	// Create a basic perspective camera
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
-	camera.position.z = 12;
+	camera.position.z = 6;
+
+	let container = document.getElementById("canvas")
+
 
 	// Create a renderer with Antialiasing
 	renderer = new THREE.WebGLRenderer({antialias:true});
@@ -53,8 +73,8 @@ function basicSetup(){
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
 	// Append Renderer to DOM
-	document.body.appendChild( renderer.domElement );
-
+	//document.body.appendChild( renderer.domElement );
+	container.appendChild(renderer.domElement);
 
    	light = new THREE.PointLight( 0xadadad, 1.5, 100 );
     
@@ -106,7 +126,7 @@ function basicSetup(){
 	scene.add( plb );
 
 
-	orbitcontrols = new THREE.OrbitControls( camera );
+	orbitcontrols = new THREE.OrbitControls( camera, renderer.domElement );
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
@@ -128,7 +148,15 @@ function onWindowResize(){
 }
 
 
-
+function getCellForMesh(mesh){
+	
+	for(let i = 0; i < cells.length; i++){
+		if(cells[i].element == mesh){
+			return cells[i];
+		}
+	}
+	return undefined
+}
 	//When the user clicks
 	function onDocumentMouseClick(event){
 	
@@ -136,10 +164,7 @@ function onWindowResize(){
 		let x = ( event.clientX / window.innerWidth ) * 2 - 1;
 		let y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 		
-		//console.log("click");
-	
-	
-	
+		//console.log("click")
 		var mouse = new THREE.Vector2( x, y);
 		
 		var ray = new THREE.Raycaster();
@@ -148,33 +173,69 @@ function onWindowResize(){
 	
 		var intersects = ray.intersectObjects(targetList);
 	
-		console.log(intersects);
 
-		let toremove = undefined;
-		if(intersects.length > 0){
-			
-			//Remove the mesh
-			
-			console.log(intersects[0].face)
-	
-			toremove = intersects[0].object;
-			
-			scene.remove(toremove)
-	
-		}
+		switch(current_mode){
+			case modes.removing:
+				let toremove = undefined;
 
-		if(toremove != undefined){
-			let index = -1;
-
-			for(let i =0; i < targetList.length; i++){
-				if(targetList[i] == toremove){
-					index = i;
-					break
+				if(intersects.length > 0){
+					//console.log(intersects[0].face)
+					toremove = intersects[0].object;
+					sphere_group.remove(toremove)
 				}
-			}
 
-			targetList.splice(index, 1);
+				if(toremove != undefined){
+					let index = -1;
+
+					for(let i =0; i < targetList.length; i++){
+						if(targetList[i] == toremove){
+							index = i;
+							break
+						}
+					}
+
+					targetList.splice(index, 1);
+					index = -1;
+
+					for(let i =0; i < cells.length; i++){
+						if(cells[i].element == toremove){
+							index = i;
+							break
+						}
+					}
+					cells.splice(index, 1);
+				}
+				
+				break;
+			
+			case modes.adding:
+
+				if(intersects.length > 0){
+					//Get cell for this object
+					let cell = getCellForMesh(intersects[0].object)
+					console.log(cell);
+				}
+				
+				
+				break;
+			
+
+			case modes.painting:
+				if(intersects.length > 0){
+					let cell = getCellForMesh(intersects[0].object)
+
+					cell.changeType(gui_info.current_terrain)
+				}
+
+
+				break;
+
+
+			default:
+				break;
 		}
+	
+		
 	
 	}
 	
@@ -435,13 +496,19 @@ function addElementsToScene(){
 
 	//If I want to extrude the sphere
 	//For each defined face
+	let levelHeight = (maxRadius - minRadius)/heightLevels;
+	current_level_height = levelHeight;
+
+	let group = new THREE.Group();
 	for (let f of calculations.geometry.faces){
 
 
 		let vertices = calculations.geometry.vertices;
 
 		//cuál es la altura de este nivel?
-		let levelHeight = (maxRadius - minRadius)/heightLevels;
+		
+
+		
 
 		//Para cada uno de los niveles
 		for(let l = 0; l < heightLevels; l++){
@@ -499,12 +566,12 @@ function addElementsToScene(){
 
 			let opacity = (0.2 -1 )*(l/3) + 1;
 			testmat.opacity = opacity
-			console.log(opacity)
-	
+
 			let tempMesh = new THREE.Mesh( g,testmat);
 			
 			targetList.push(tempMesh);
-			scene.add(tempMesh);
+			//scene.add(tempMesh);
+			group.add(tempMesh);
 
 			//Add the cell to this level
 
@@ -514,12 +581,17 @@ function addElementsToScene(){
 
 			dictionary_by_level[l].push(tempMesh)
 
+			let cell = new Cell(tempMesh, f.a, f.b, f.c, l);
+			cells.push(cell);
 		}
 
 		
 		
 
 	}
+
+	scene.add(group);
+	sphere_group = group;
 
 	
 }
@@ -529,24 +601,55 @@ loader.load( 'https://rawgit.com/mrdoob/three.js/dev/examples/fonts/helvetiker_r
 
 
 loaded_font = font
-  /*var textGeometry = new THREE.TextGeometry( "text", {
-
-    font: font,
-
-    size: 50,
-    height: 10,
-    curveSegments: 12,
-
-    bevelThickness: 1,
-    bevelSize: 1,
-    bevelEnabled: true
-
-  });*/
 
   	basicSetup();
 	addElementsToScene();
+
+	prepareGUI();
 	render();
 });   
+
+let gui_info = {
+	"mode":"removing",
+	"addvoxel" : function(){
+		current_mode = modes.adding;
+		this.mode = modes.adding
+	},
+	"removevoxel": function(){
+		current_mode = modes.removing;
+		this.mode = modes.removing
+	},
+	"paintvoxel":function(){
+		current_mode = modes.painting;
+		this.mode = modes.painting
+	},
+	"current_terrain": "dirt"
+}
+
+
+
+function prepareGUI(){
+
+	gui = new dat.GUI();
+	/*gui.add(gui_info, "message")
+
+	let controller = gui.add(gui_info, "test");
+	controller.onChange(function(value){
+	})*/
+
+	let terrain_editing_folder = gui.addFolder("Terrain editing")
+	terrain_editing_folder.add(gui_info, "mode").listen();
+	terrain_editing_folder.add(gui_info, 'addvoxel').listen();
+	terrain_editing_folder.add(gui_info, 'removevoxel').listen();
+
+
+	let terrain_painting_folder = gui.addFolder("Terrain painting")
+	let terrain_options = Object.keys(CellType);
+	terrain_painting_folder.add(gui_info, "paintvoxel")
+	terrain_painting_folder.add(gui_info, "current_terrain", terrain_options )
+	
+
+}
 
 
 
