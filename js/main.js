@@ -66,6 +66,10 @@ let sphere_group = undefined;
 let basic_icosphereGeometry = createIcosphereGeometry()
 
 
+let current_rotation_angle = 0.0;
+let rotation_speed = 0.02;
+
+
 function basicSetup(){
 	// Create an empty scene
 	scene = new THREE.Scene();
@@ -722,7 +726,8 @@ let gui_info = {
 		this.mode = modes.painting
 		onModeUpdated()
 	},
-	"current_terrain": "dirt"
+	"current_terrain": "dirt",
+	"animating":false
 }
 
 
@@ -730,6 +735,42 @@ function onModeUpdated(){
 	document.getElementById("current-tool-p").innerHTML = descriptionForModes[gui_info.mode]
 }
 
+
+function prepareGUI(){
+	$("#add-bt").click(function(value){
+		gui_info.addvoxel();
+	})
+	$("#remove-bt").click(function(value){
+		gui_info.removevoxel();
+	})
+
+	$("#paint-bt").click(function(value){
+		gui_info.paintvoxel();
+	})
+
+	//populate the selector
+	let terrain_options = Object.keys(CellType);
+	console.log(terrain_options);
+	$('#paint-current-s').empty();
+
+
+	for(let i = 0; i < terrain_options.length; i++){
+		$('#paint-current-s').append('<option value="'+terrain_options[i] + '"> ' + terrain_options[i].capitalize()+'</option>')
+ 
+	}
+
+	$('#paint-current-s').on('change', function() {
+		gui_info.current_terrain = this.value;
+	  });
+
+	$('#animate-cb').change(function(){
+			if ($(this).is(':checked')) {
+				gui_info.animating = true
+			}else{
+				gui_info.animating = false;
+			}
+		});
+}
 
 /*function prepareGUI(){
 
@@ -747,7 +788,7 @@ function onModeUpdated(){
 }*/
 
 
-
+const two_pi = Math.PI * 2;
 
 // Render Loop
 var render = function () {
@@ -756,7 +797,15 @@ var render = function () {
   //cube.rotation.x += 0.01;
   //cube.rotation.y += 0.01;
 
+  if(gui_info.animating == true){
+	  sphere_group.rotation.y =  (sphere_group.rotation.y + rotation_speed) % two_pi;
+  }
+
   // Render the scene
   renderer.render(scene, camera);
 };
 
+String.prototype.capitalize = function() {
+	return this.charAt(0).toUpperCase() + this.slice(1)
+  }
+  

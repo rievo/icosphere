@@ -1,5 +1,6 @@
 body { 
     margin: 0; 
+    box-sizing: border-box;
 }
 #canvas { 
     width: 100%; 
@@ -16,6 +17,7 @@ body {
 
 #current-tool-p{
     font-size: 20px;
+    color: rgb(210, 210, 218);
 }
 
 #controls-div{
@@ -23,5 +25,60 @@ body {
     top:0;
     right:0;
     padding: 20px;
+
+    width:170px;
+    height:200px;
+
+
     background-color: rgba(123,154,213, 150);
+
+    border-radius: 10px 0px 0px 10px;
+    border-style: solid;
+    border-color: rgba(223,223,223,210);
 }
+
+select{
+    font-weight: bold;
+    margin: 0 auto;
+    width:100%;
+    color: #494949 !important;
+    text-transform: uppercase;
+    background: #ffffff;
+    border: 2px solid #494949 !important;
+    display: inline-block;
+}
+
+option{
+    font-weight: bold;
+    color: #494949 !important;
+}
+
+.ctrl-section{
+    margin-bottom: 14px;
+}
+.tool-bt{
+    display: block;
+    margin: 0 auto;
+    width:100%;
+    font-weight: bold;
+
+    padding:4px;
+    border-radius: 2px;
+
+    margin-bottom: 5px;
+
+    color: #494949 !important;
+    text-transform: uppercase;
+    background: #ffffff;
+    border: 2px solid #494949 !important;
+    display: inline-block;
+}
+
+.tool-bt:hover{
+
+    color: #ffffff !important;
+    background: #494949;
+    border: 2px solid #ffffff !important;
+    cursor: pointer;
+}
+
