@@ -46,10 +46,19 @@ let modes = {
 	painting: "painting"
 }
 
-let current_mode = modes.removing
+let descriptionForModes = {
+	none: "Free exploration",
+	adding: "Adding voxels",
+	removing: "Removing voxels",
+	painting: "Painting tool"
+}
+
+let current_mode = modes.none
 
 
 let sphere_group = undefined;
+
+let basic_icosphereGeometry = createIcosphereGeometry()
 
 
 function basicSetup(){
@@ -136,6 +145,7 @@ function basicSetup(){
 	var axesHelper = new THREE.AxesHelper( 5 );
 	scene.add( axesHelper );
 
+	
 }
 
 function onWindowResize(){
@@ -158,86 +168,88 @@ function getCellForMesh(mesh){
 	return undefined
 }
 	//When the user clicks
-	function onDocumentMouseClick(event){
-	
-		event.stopPropagation();
-		let x = ( event.clientX / window.innerWidth ) * 2 - 1;
-		let y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-		
-		//console.log("click")
-		var mouse = new THREE.Vector2( x, y);
-		
-		var ray = new THREE.Raycaster();
-	
-		ray.setFromCamera(mouse, camera);
-	
-		var intersects = ray.intersectObjects(targetList);
-	
+function onDocumentMouseClick(event){
 
-		switch(current_mode){
-			case modes.removing:
-				let toremove = undefined;
+	event.stopPropagation();
+	let x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	let y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+	
+	//console.log("click")
+	var mouse = new THREE.Vector2( x, y);
+	
+	var ray = new THREE.Raycaster();
 
-				if(intersects.length > 0){
-					//console.log(intersects[0].face)
-					toremove = intersects[0].object;
-					sphere_group.remove(toremove)
-				}
+	ray.setFromCamera(mouse, camera);
 
-				if(toremove != undefined){
-					let index = -1;
+	var intersects = ray.intersectObjects(targetList);
 
-					for(let i =0; i < targetList.length; i++){
-						if(targetList[i] == toremove){
-							index = i;
-							break
-						}
+
+	switch(current_mode){
+		case modes.removing:
+			let toremove = undefined;
+
+			if(intersects.length > 0){
+				//console.log(intersects[0].face)
+				toremove = intersects[0].object;
+				sphere_group.remove(toremove)
+			}
+
+			if(toremove != undefined){
+				let index = -1;
+
+				for(let i =0; i < targetList.length; i++){
+					if(targetList[i] == toremove){
+						index = i;
+						break
 					}
+				}
 
-					targetList.splice(index, 1);
-					index = -1;
+				targetList.splice(index, 1);
+				index = -1;
 
-					for(let i =0; i < cells.length; i++){
-						if(cells[i].element == toremove){
-							index = i;
-							break
-						}
+				for(let i =0; i < cells.length; i++){
+					if(cells[i].element == toremove){
+						index = i;
+						break
 					}
-					cells.splice(index, 1);
 				}
-				
-				break;
+				cells.splice(index, 1);
+			}
 			
-			case modes.adding:
-
-				if(intersects.length > 0){
-					//Get cell for this object
-					let cell = getCellForMesh(intersects[0].object)
-					console.log(cell);
-				}
-				
-				
-				break;
-			
-
-			case modes.painting:
-				if(intersects.length > 0){
-					let cell = getCellForMesh(intersects[0].object)
-
-					cell.changeType(gui_info.current_terrain)
-				}
-
-
-				break;
-
-
-			default:
-				break;
-		}
-	
+			break;
 		
-	
+		case modes.adding:
+
+			if(intersects.length > 0){
+				//Get cell for this object
+				let cell = getCellForMesh(intersects[0].object)
+				console.log(cell, cell.element);
+
+				console.log(basic_icosphereGeometry.geometry.vertices)
+			}
+			
+			
+			break;
+		
+
+		case modes.painting:
+			if(intersects.length > 0){
+				let cell = getCellForMesh(intersects[0].object)
+
+				cell.changeType(gui_info.current_terrain)
+			}
+
+
+			break;
+
+
+		default:
+			break;
 	}
+
+	
+
+}
 	
 
 
@@ -465,7 +477,8 @@ function getPointAtRadius(p){
 
 function addElementsToScene(){
 
-	let calculations =  createIcosphereGeometry();
+	//let calculations =  createIcosphereGeometry();
+	let calculations = basic_icosphereGeometry
 
 	/*let geom = calculations.geometry;
 	let mesh = new THREE.Mesh( geom,             new THREE.MeshLambertMaterial({
@@ -602,6 +615,8 @@ loader.load( 'https://rawgit.com/mrdoob/three.js/dev/examples/fonts/helvetiker_r
 
 loaded_font = font
 
+	onModeUpdated();
+
   	basicSetup();
 	addElementsToScene();
 
@@ -610,22 +625,30 @@ loaded_font = font
 });   
 
 let gui_info = {
-	"mode":"removing",
+	"mode":"none",
 	"addvoxel" : function(){
 		current_mode = modes.adding;
 		this.mode = modes.adding
+		onModeUpdated()
+		
 	},
 	"removevoxel": function(){
 		current_mode = modes.removing;
 		this.mode = modes.removing
+		onModeUpdated()
 	},
 	"paintvoxel":function(){
 		current_mode = modes.painting;
 		this.mode = modes.painting
+		onModeUpdated()
 	},
 	"current_terrain": "dirt"
 }
 
+
+function onModeUpdated(){
+	document.getElementById("current-tool-p").innerHTML = descriptionForModes[gui_info.mode]
+}
 
 
 function prepareGUI(){

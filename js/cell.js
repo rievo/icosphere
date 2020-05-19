@@ -37,6 +37,13 @@ class Cell{
                 this.element.material.transparent = false;
             }
             this.element.material.opacity = newinfo.opacity;
+
+            if(this.type == CellType.magma.name){
+                //this.element.material.emissive.setHex(newinfo.color);
+                this.element.material.emissive.setHex(0x000)
+            }else{
+                this.element.material.emissive.setHex(0x000)
+            }
         }else{
             console.log("ERROR: Trying to set the material to an unknown -> " + this.type)
         }
