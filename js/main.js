@@ -200,30 +200,39 @@ function onDocumentMouseClick(event){
 			if(intersects.length > 0){
 				//console.log(intersects[0].face)
 				toremove = intersects[0].object;
-				sphere_group.remove(toremove)
-			}
+				
 
-			if(toremove != undefined){
-				let index = -1;
+				let cell = getCellForMesh(toremove);
 
-				for(let i =0; i < targetList.length; i++){
-					if(targetList[i] == toremove){
-						index = i;
-						break
+				if(cell.level > 0){
+					sphere_group.remove(toremove)
+
+					let index = -1;
+	
+					for(let i =0; i < targetList.length; i++){
+						if(targetList[i] == toremove){
+							index = i;
+							break
+						}
 					}
+	
+					targetList.splice(index, 1);
+					index = -1;
+	
+					for(let i =0; i < cells.length; i++){
+						if(cells[i].element == toremove){
+							index = i;
+							break
+						}
+					}
+					cells.splice(index, 1);
 				}
 
-				targetList.splice(index, 1);
-				index = -1;
-
-				for(let i =0; i < cells.length; i++){
-					if(cells[i].element == toremove){
-						index = i;
-						break
-					}
-				}
-				cells.splice(index, 1);
+				
+				
 			}
+
+			
 			
 			break;
 		
